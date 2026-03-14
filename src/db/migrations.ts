@@ -44,6 +44,18 @@ const DEFAULT_SETTINGS = [
   ['theme', 'dark'],
 ];
 
+async function addColumnIfMissing(
+  db: DatabaseAdapter,
+  table: string,
+  column: string,
+  type: string,
+): Promise<void> {
+  const cols = await db.select<{ name: string }>(`PRAGMA table_info(${table})`);
+  if (!cols.some((c) => c.name === column)) {
+    await db.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
+}
+
 export async function runMigrations(db: DatabaseAdapter): Promise<void> {
   const statements = MIGRATION_SQL
     .split(';')
@@ -53,6 +65,9 @@ export async function runMigrations(db: DatabaseAdapter): Promise<void> {
   for (const statement of statements) {
     await db.execute(statement);
   }
+
+  // Add columns introduced after initial schema
+  await addColumnIfMissing(db, 'todos', 'link', 'TEXT');
 
   for (const [key, value] of DEFAULT_SETTINGS) {
     await db.execute(

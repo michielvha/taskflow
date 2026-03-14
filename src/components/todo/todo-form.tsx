@@ -83,6 +83,8 @@ export function TodoForm({ todo, topics, defaultTopicId, onSubmit, onClose }: To
               type="url"
               value={link}
               onChange={(e) => setLink(e.target.value)}
+              onFocus={() => { if (!link) setLink('https://'); }}
+              onBlur={() => { if (link === 'https://') setLink(''); }}
               placeholder="https://... (optional)"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
