@@ -1,0 +1,121 @@
+name: CI
+
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+  security-events: write
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "25"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm run test
+
+  sast:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "25"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "HIGH,CRITICAL"
+          format: "sarif"
+          output: "trivy-fs.sarif"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-fs.sarif"
+
+  build:
+    name: Docker Build & Push
+    needs: [lint-and-test, sast]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Tag the repo
+        id: gitversion
+        uses: michielvha/gitversion-tag-action@main
+        with:
+          configFilePath: gitversion.yml
+
+      - name: Build and Push Docker Image
+        id: docker-release
+        uses: michielvha/docker-release-action@main
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          project: ${{ github.event.repository.name }}
+          version: ${{ steps.gitversion.outputs.semver }}
+          platforms: "linux/amd64,linux/arm64"
+
+      - name: Trivy Image Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}:${{ steps.gitversion.outputs.semver }}"
+          severity: "HIGH,CRITICAL"
+          format: "sarif"
+          output: "trivy-image.sarif"
+
+      - name: Upload Image SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-image.sarif"

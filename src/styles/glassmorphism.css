@@ -1,0 +1,26 @@
+/* Glass panel effect - macOS Sequoia translucent look */
+.glass {
+  background: rgba(22, 27, 34, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(48, 54, 61, 0.5);
+}
+
+.glass-heavy {
+  background: rgba(22, 27, 34, 0.85);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(48, 54, 61, 0.6);
+}
+
+/* Subtle gradient overlay for depth */
+.glass-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(88, 166, 255, 0.05) 0%,
+    rgba(22, 27, 34, 0.65) 50%,
+    rgba(88, 166, 255, 0.03) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
