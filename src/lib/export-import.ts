@@ -1,20 +1,23 @@
 import type { DatabaseAdapter } from '@/db/database.ts';
 import { TodoRepository } from '@/db/repositories/todo.repository.ts';
 import { TopicRepository } from '@/db/repositories/topic.repository.ts';
+import { SubtaskRepository } from '@/db/repositories/subtask.repository.ts';
 import { SettingsRepository } from '@/db/repositories/settings.repository.ts';
-import type { Todo, Topic, Setting } from '@/db/schema.ts';
+import type { Todo, Topic, Subtask, Setting } from '@/db/schema.ts';
 
 interface ExportData {
   version: 1;
   exported_at: string;
   topics: Topic[];
   todos: Todo[];
+  subtasks?: Subtask[];
   settings: Setting[];
 }
 
 export async function exportData(db: DatabaseAdapter): Promise<string> {
   const todoRepo = new TodoRepository(db);
   const topicRepo = new TopicRepository(db);
+  const subtaskRepo = new SubtaskRepository(db);
   const settingsRepo = new SettingsRepository(db);
 
   const data: ExportData = {
@@ -22,6 +25,7 @@ export async function exportData(db: DatabaseAdapter): Promise<string> {
     exported_at: new Date().toISOString(),
     topics: await topicRepo.exportAll(),
     todos: await todoRepo.exportAll(),
+    subtasks: await subtaskRepo.exportAll(),
     settings: await settingsRepo.exportAll(),
   };
 
@@ -36,6 +40,7 @@ export async function importData(db: DatabaseAdapter, json: string): Promise<voi
   }
 
   // Clear existing data
+  await db.execute('DELETE FROM subtasks');
   await db.execute('DELETE FROM todos');
   await db.execute('DELETE FROM topics');
   await db.execute('DELETE FROM settings');
@@ -56,6 +61,17 @@ export async function importData(db: DatabaseAdapter, json: string): Promise<voi
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [todo.id, todo.title, todo.description, todo.topic_id, todo.due_date, todo.completed, todo.completed_at, todo.priority, todo.sort_order, todo.created_at, todo.updated_at],
     );
+  }
+
+  // Import subtasks
+  if (data.subtasks) {
+    for (const subtask of data.subtasks) {
+      await db.execute(
+        `INSERT INTO subtasks (id, todo_id, title, completed, sort_order, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [subtask.id, subtask.todo_id, subtask.title, subtask.completed, subtask.sort_order, subtask.created_at],
+      );
+    }
   }
 
   // Import settings

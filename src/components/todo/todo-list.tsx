@@ -1,16 +1,23 @@
 import { TodoItem } from './todo-item.tsx';
 import { GlassPanel } from '@/components/layout/glass-panel.tsx';
-import type { Todo, Topic } from '@/db/schema.ts';
+import type { Todo, Topic, Subtask } from '@/db/schema.ts';
 
 interface TodoListProps {
   todos: Todo[];
   topics: Topic[];
+  subtaskMap: Map<string, Subtask[]>;
   onToggleComplete: (id: string) => void;
   onEdit: (todo: Todo) => void;
   onDelete: (id: string) => void;
+  onAddSubtask: (todoId: string, title: string) => void;
+  onToggleSubtask: (subtaskId: string) => void;
+  onDeleteSubtask: (subtaskId: string) => void;
 }
 
-export function TodoList({ todos, topics, onToggleComplete, onEdit, onDelete }: TodoListProps) {
+export function TodoList({
+  todos, topics, subtaskMap, onToggleComplete, onEdit, onDelete,
+  onAddSubtask, onToggleSubtask, onDeleteSubtask,
+}: TodoListProps) {
   const topicMap = new Map(topics.map((t) => [t.id, t]));
 
   if (todos.length === 0) {
@@ -29,9 +36,13 @@ export function TodoList({ todos, topics, onToggleComplete, onEdit, onDelete }: 
           key={todo.id}
           todo={todo}
           topic={todo.topic_id ? topicMap.get(todo.topic_id) : undefined}
+          subtasks={subtaskMap.get(todo.id)}
           onToggleComplete={onToggleComplete}
           onEdit={onEdit}
           onDelete={onDelete}
+          onAddSubtask={onAddSubtask}
+          onToggleSubtask={onToggleSubtask}
+          onDeleteSubtask={onDeleteSubtask}
         />
       ))}
     </GlassPanel>

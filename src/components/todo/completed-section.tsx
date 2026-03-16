@@ -2,24 +2,32 @@ import { useState, useCallback } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { TodoItem } from './todo-item.tsx';
 import { GlassPanel } from '@/components/layout/glass-panel.tsx';
-import type { Todo, Topic } from '@/db/schema.ts';
+import type { Todo, Topic, Subtask } from '@/db/schema.ts';
 
 interface CompletedSectionProps {
   completed: Todo[];
   topics: Topic[];
+  subtaskMap: Map<string, Subtask[]>;
   autoHide: boolean;
   autoHideDelay: number;
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onAddSubtask: (todoId: string, title: string) => void;
+  onToggleSubtask: (subtaskId: string) => void;
+  onDeleteSubtask: (subtaskId: string) => void;
 }
 
 export function CompletedSection({
   completed,
   topics,
+  subtaskMap,
   autoHide,
   autoHideDelay,
   onToggleComplete,
   onDelete,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
 }: CompletedSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [hidden, setHidden] = useState(false);
@@ -35,7 +43,6 @@ export function CompletedSection({
 
   const handleToggle = useCallback((id: string) => {
     onToggleComplete(id);
-    // Reset visibility when toggling, then schedule hide
     setHidden(false);
     setIsOpen(true);
     scheduleHide();
@@ -63,9 +70,13 @@ export function CompletedSection({
               key={todo.id}
               todo={todo}
               topic={todo.topic_id ? topicMap.get(todo.topic_id) : undefined}
+              subtasks={subtaskMap.get(todo.id)}
               onToggleComplete={handleToggle}
               onEdit={() => {}}
               onDelete={onDelete}
+              onAddSubtask={onAddSubtask}
+              onToggleSubtask={onToggleSubtask}
+              onDeleteSubtask={onDeleteSubtask}
             />
           ))}
         </div>

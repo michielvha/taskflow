@@ -23,7 +23,11 @@ export function AppShell() {
   const [showTopicForm, setShowTopicForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const { todos, completed, addTodo, updateTodo, toggleComplete, deleteTodo } = useTodos({
+  const {
+    todos, completed, subtaskMap,
+    addTodo, updateTodo, toggleComplete, deleteTodo,
+    addSubtask, toggleSubtask, deleteSubtask,
+  } = useTodos({
     topicId: selectedTopicId,
     sort: sortMode,
   });
@@ -87,18 +91,26 @@ export function AppShell() {
             <TodoList
               todos={todos}
               topics={topics}
+              subtaskMap={subtaskMap}
               onToggleComplete={handleToggleComplete}
               onEdit={setEditingTodo}
               onDelete={handleDeleteTodo}
+              onAddSubtask={addSubtask}
+              onToggleSubtask={toggleSubtask}
+              onDeleteSubtask={deleteSubtask}
             />
 
             <CompletedSection
               completed={completed}
               topics={topics}
+              subtaskMap={subtaskMap}
               autoHide={autoHideCompleted}
               autoHideDelay={autoHideDelay}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTodo}
+              onAddSubtask={addSubtask}
+              onToggleSubtask={toggleSubtask}
+              onDeleteSubtask={deleteSubtask}
             />
           </div>
 

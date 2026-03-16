@@ -26,6 +26,15 @@ CREATE TABLE IF NOT EXISTS todos (
   updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS subtasks (
+  id          TEXT PRIMARY KEY,
+  todo_id     TEXT NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  completed   INTEGER NOT NULL DEFAULT 0,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key    TEXT PRIMARY KEY,
   value  TEXT NOT NULL
@@ -35,6 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_todos_topic ON todos(topic_id);
 CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
 CREATE INDEX IF NOT EXISTS idx_todos_due_date ON todos(due_date);
 CREATE INDEX IF NOT EXISTS idx_todos_created_at ON todos(created_at);
+CREATE INDEX IF NOT EXISTS idx_subtasks_todo_id ON subtasks(todo_id);
 `;
 
 const DEFAULT_SETTINGS = [
