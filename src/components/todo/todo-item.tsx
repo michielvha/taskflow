@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronRight, ExternalLink, ListChecks, Plus, Trash2, X } from 'lucide-react';
+import { Check, ChevronRight, Copy, ExternalLink, ListChecks, Plus, Trash2, X } from 'lucide-react';
 import { TopicBadge } from '@/components/topic/topic-badge.tsx';
 import { PRIORITY_LABELS } from '@/lib/constants.ts';
 import { format, isPast, isToday } from 'date-fns';
@@ -23,6 +23,7 @@ export function TodoItem({
 }: TodoItemProps) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
+  const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isOverdue = todo.due_date && !todo.completed && isPast(new Date(todo.due_date)) && !isToday(new Date(todo.due_date));
@@ -41,8 +42,26 @@ export function TodoItem({
     if (!title) return;
     onAddSubtask(todo.id, title);
     setNewSubtask('');
-    // Keep focus on input for rapid entry
     inputRef.current?.focus();
+  };
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const check = todo.completed ? 'x' : ' ';
+    const lines: string[] = [`- [${check}] ${todo.title}`];
+    if (todo.description) lines.push(`  ${todo.description}`);
+    if (todo.link) lines.push(`  ${todo.link}`);
+    const meta: string[] = [];
+    if (todo.priority > 0) meta.push(PRIORITY_LABELS[todo.priority]);
+    if (topic) meta.push(topic.name);
+    if (todo.due_date) meta.push(`Due: ${format(new Date(todo.due_date), 'MMM d, yyyy')}`);
+    if (meta.length > 0) lines.push(`  _${meta.join(' | ')}_`);
+    for (const s of subtasks) {
+      lines.push(`  - [${s.completed ? 'x' : ' '}] ${s.title}`);
+    }
+    await navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -123,6 +142,14 @@ export function TodoItem({
               {format(new Date(todo.due_date), 'MMM d')}
             </span>
           )}
+
+          <button
+            onClick={handleCopy}
+            className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+            aria-label="Copy as markdown"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
 
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(todo.id); }}
