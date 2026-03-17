@@ -11,12 +11,13 @@ interface TodoListProps {
   onDelete: (id: string) => void;
   onAddSubtask: (todoId: string, title: string) => void;
   onToggleSubtask: (subtaskId: string) => void;
+  onUpdateSubtask: (subtaskId: string, title: string) => void;
   onDeleteSubtask: (subtaskId: string) => void;
 }
 
 export function TodoList({
   todos, topics, subtaskMap, onToggleComplete, onEdit, onDelete,
-  onAddSubtask, onToggleSubtask, onDeleteSubtask,
+  onAddSubtask, onToggleSubtask, onUpdateSubtask, onDeleteSubtask,
 }: TodoListProps) {
   const topicMap = new Map(topics.map((t) => [t.id, t]));
 
@@ -42,6 +43,7 @@ export function TodoList({
           onDelete={onDelete}
           onAddSubtask={onAddSubtask}
           onToggleSubtask={onToggleSubtask}
+          onUpdateSubtask={onUpdateSubtask}
           onDeleteSubtask={onDeleteSubtask}
         />
       ))}

@@ -26,7 +26,7 @@ export function AppShell() {
   const {
     todos, completed, subtaskMap,
     addTodo, updateTodo, toggleComplete, deleteTodo,
-    addSubtask, toggleSubtask, deleteSubtask,
+    addSubtask, toggleSubtask, updateSubtask, deleteSubtask,
   } = useTodos({
     topicId: selectedTopicId,
     sort: sortMode,
@@ -97,6 +97,7 @@ export function AppShell() {
               onDelete={handleDeleteTodo}
               onAddSubtask={addSubtask}
               onToggleSubtask={toggleSubtask}
+              onUpdateSubtask={updateSubtask}
               onDeleteSubtask={deleteSubtask}
             />
 
@@ -110,6 +111,7 @@ export function AppShell() {
               onDelete={handleDeleteTodo}
               onAddSubtask={addSubtask}
               onToggleSubtask={toggleSubtask}
+              onUpdateSubtask={updateSubtask}
               onDeleteSubtask={deleteSubtask}
             />
           </div>

@@ -14,12 +14,87 @@ interface TodoItemProps {
   onDelete: (id: string) => void;
   onAddSubtask: (todoId: string, title: string) => void;
   onToggleSubtask: (subtaskId: string) => void;
+  onUpdateSubtask: (subtaskId: string, title: string) => void;
   onDeleteSubtask: (subtaskId: string) => void;
+}
+
+function EditableSubtask({ subtask, onToggle, onUpdate, onDelete }: {
+  subtask: Subtask;
+  onToggle: () => void;
+  onUpdate: (title: string) => void;
+  onDelete: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(subtask.title);
+  const editRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) editRef.current?.focus();
+  }, [editing]);
+
+  const commit = () => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== subtask.title) {
+      onUpdate(trimmed);
+    } else {
+      setValue(subtask.title);
+    }
+    setEditing(false);
+  };
+
+  return (
+    <div className="group/sub flex items-center gap-2 rounded px-2 py-1 hover:bg-accent/30">
+      <button
+        onClick={onToggle}
+        className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
+          subtask.completed
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-muted-foreground/40 hover:border-primary'
+        }`}
+      >
+        {subtask.completed === 1 && (
+          <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </button>
+
+      {editing ? (
+        <input
+          ref={editRef}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+            if (e.key === 'Escape') { setValue(subtask.title); setEditing(false); }
+          }}
+          className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
+        />
+      ) : (
+        <span
+          onClick={() => setEditing(true)}
+          className={`flex-1 cursor-text text-xs ${subtask.completed ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+        >
+          {subtask.title}
+        </span>
+      )}
+
+      <button
+        onClick={onDelete}
+        className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/sub:opacity-100"
+        aria-label="Delete subtask"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
 }
 
 export function TodoItem({
   todo, topic, subtasks = [], onToggleComplete, onEdit, onDelete,
-  onAddSubtask, onToggleSubtask, onDeleteSubtask,
+  onAddSubtask, onToggleSubtask, onUpdateSubtask, onDeleteSubtask,
 }: TodoItemProps) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
@@ -30,7 +105,6 @@ export function TodoItem({
   const completedCount = subtasks.filter((s) => s.completed === 1).length;
   const hasSubtasks = subtasks.length > 0;
 
-  // Focus the input when expanding
   useEffect(() => {
     if (expanded && inputRef.current) {
       inputRef.current.focus();
@@ -96,7 +170,6 @@ export function TodoItem({
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Subtask progress + expand toggle */}
           <button
             onClick={() => setExpanded(!expanded)}
             className={`flex items-center gap-1 rounded px-1 py-0.5 text-muted-foreground transition-colors hover:text-foreground ${
@@ -161,39 +234,18 @@ export function TodoItem({
         </div>
       </div>
 
-      {/* Subtasks panel */}
       {expanded && (
         <div className="ml-11 mr-3 mb-1 flex flex-col gap-0.5">
           {subtasks.map((subtask) => (
-            <div key={subtask.id} className="group/sub flex items-center gap-2 rounded px-2 py-1 hover:bg-accent/30">
-              <button
-                onClick={() => onToggleSubtask(subtask.id)}
-                className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                  subtask.completed
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-muted-foreground/40 hover:border-primary'
-                }`}
-              >
-                {subtask.completed === 1 && (
-                  <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </button>
-              <span className={`flex-1 text-xs ${subtask.completed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                {subtask.title}
-              </span>
-              <button
-                onClick={() => onDeleteSubtask(subtask.id)}
-                className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover/sub:opacity-100"
-                aria-label="Delete subtask"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
+            <EditableSubtask
+              key={subtask.id}
+              subtask={subtask}
+              onToggle={() => onToggleSubtask(subtask.id)}
+              onUpdate={(title) => onUpdateSubtask(subtask.id, title)}
+              onDelete={() => onDeleteSubtask(subtask.id)}
+            />
           ))}
 
-          {/* Inline add — always visible when expanded */}
           <div className="flex items-center gap-2 px-2 py-1">
             <Plus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <input

@@ -129,6 +129,25 @@ export function useTodos(options: UseTodosOptions = {}) {
     await repo.toggleComplete(subtaskId);
   }, [db]);
 
+  const updateSubtask = useCallback(async (subtaskId: string, title: string) => {
+    if (!db) return;
+    setSubtaskMap((prev) => {
+      const next = new Map(prev);
+      for (const [todoId, subtasks] of next) {
+        const idx = subtasks.findIndex((s) => s.id === subtaskId);
+        if (idx !== -1) {
+          const updated = [...subtasks];
+          updated[idx] = { ...updated[idx], title };
+          next.set(todoId, updated);
+          break;
+        }
+      }
+      return next;
+    });
+    const repo = new SubtaskRepository(db);
+    await repo.updateTitle(subtaskId, title);
+  }, [db]);
+
   const deleteSubtask = useCallback(async (subtaskId: string) => {
     if (!db) return;
     // Optimistic: remove from local state immediately
@@ -155,7 +174,7 @@ export function useTodos(options: UseTodosOptions = {}) {
   return {
     todos, completed, subtaskMap, loading,
     addTodo, updateTodo, toggleComplete, deleteTodo,
-    addSubtask, toggleSubtask, deleteSubtask,
+    addSubtask, toggleSubtask, updateSubtask, deleteSubtask,
     refresh,
   };
 }

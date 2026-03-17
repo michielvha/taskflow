@@ -59,6 +59,10 @@ export class SubtaskRepository {
     await this.db.execute('UPDATE subtasks SET completed = ? WHERE id = ?', [newCompleted, id]);
   }
 
+  async updateTitle(id: string, title: string): Promise<void> {
+    await this.db.execute('UPDATE subtasks SET title = ? WHERE id = ?', [title, id]);
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.execute('DELETE FROM subtasks WHERE id = ?', [id]);
   }

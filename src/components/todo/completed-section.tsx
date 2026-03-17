@@ -14,6 +14,7 @@ interface CompletedSectionProps {
   onDelete: (id: string) => void;
   onAddSubtask: (todoId: string, title: string) => void;
   onToggleSubtask: (subtaskId: string) => void;
+  onUpdateSubtask: (subtaskId: string, title: string) => void;
   onDeleteSubtask: (subtaskId: string) => void;
 }
 
@@ -27,6 +28,7 @@ export function CompletedSection({
   onDelete,
   onAddSubtask,
   onToggleSubtask,
+  onUpdateSubtask,
   onDeleteSubtask,
 }: CompletedSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
@@ -76,6 +78,7 @@ export function CompletedSection({
               onDelete={onDelete}
               onAddSubtask={onAddSubtask}
               onToggleSubtask={onToggleSubtask}
+              onUpdateSubtask={onUpdateSubtask}
               onDeleteSubtask={onDeleteSubtask}
             />
           ))}
